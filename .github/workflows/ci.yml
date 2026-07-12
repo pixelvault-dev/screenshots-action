@@ -1,0 +1,22 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Syntax check
+        run: node --check upload.mjs
+      - name: Smoke test (no files matched → exit 0)
+        run: |
+          mkdir -p /tmp/empty
+          out=$(mktemp)
+          INPUT_API_KEY=pv_live_x INPUT_PATH=/tmp/empty INPUT_PATTERN='*.png' \
+            GITHUB_OUTPUT="$out" GITHUB_RUN_ID=1 node upload.mjs
+          grep -q '^count=0$' "$out"

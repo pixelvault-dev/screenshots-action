@@ -1,0 +1,68 @@
+name: "PixelVault — Upload Screenshots"
+description: "Host CI screenshots (e.g. visual-regression diffs) on PixelVault and post them to the pull request."
+author: "PixelVault"
+branding:
+  icon: "image"
+  color: "purple"
+
+inputs:
+  api-key:
+    description: "PixelVault API key (pv_live_...). Store it as a repository secret."
+    required: true
+  path:
+    description: "Root directory to search for screenshots (recursive)."
+    default: "test-results"
+  pattern:
+    description: "Filename glob to match under `path` (e.g. *.png, *-diff.png)."
+    default: "*.png"
+  collection-type:
+    description: "Collection type (the discriminator; keep the default for CI runs)."
+    default: "ci_build"
+  collection-name:
+    description: "Idempotency key for the collection. Re-running the job reuses the same collection. Defaults to the CI run id."
+    default: ""
+  visibility:
+    description: "'private' (signed URLs) or 'public'."
+    default: "private"
+  expires-in:
+    description: "Image deletion TTL in seconds (optional; blank = permanent)."
+    default: ""
+  sign-expires-in:
+    description: "Signature lifetime in seconds for private URLs (optional; server default is 7 days)."
+    default: ""
+  pr-comment:
+    description: "Post/update a sticky comment on the pull request with the screenshots."
+    default: "true"
+  api-url:
+    description: "PixelVault API base URL."
+    default: "https://api.pixelvault.dev"
+  github-token:
+    description: "Token used to post the PR comment (needs pull-requests: write)."
+    default: ${{ github.token }}
+
+outputs:
+  collection-id:
+    description: "The PixelVault collection id the screenshots were uploaded to."
+    value: ${{ steps.upload.outputs.collection-id }}
+  count:
+    description: "Number of screenshots successfully uploaded."
+    value: ${{ steps.upload.outputs.count }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: upload
+      shell: bash
+      run: node "${{ github.action_path }}/upload.mjs"
+      env:
+        INPUT_API_KEY: ${{ inputs.api-key }}
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_PATTERN: ${{ inputs.pattern }}
+        INPUT_COLLECTION_TYPE: ${{ inputs.collection-type }}
+        INPUT_COLLECTION_NAME: ${{ inputs.collection-name }}
+        INPUT_VISIBILITY: ${{ inputs.visibility }}
+        INPUT_EXPIRES_IN: ${{ inputs.expires-in }}
+        INPUT_SIGN_EXPIRES_IN: ${{ inputs.sign-expires-in }}
+        INPUT_PR_COMMENT: ${{ inputs.pr-comment }}
+        INPUT_API_URL: ${{ inputs.api-url }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
