@@ -1,11 +1,11 @@
 name: e2e (self-test)
 
-# Runs the action against the live PixelVault API to exercise the full chain:
-# glob → batch upload → signed URLs → sticky PR comment. Needs the repo secret
-# PIXELVAULT_API_KEY. On fork PRs the secret is unavailable and the upload step
-# fails — expected; this is a maintainer integration test.
+# Manual smoke test: runs the action against the live PixelVault API (glob →
+# batch upload → signed URLs) to re-verify end to end. Trigger from the Actions
+# tab. Needs the repo secret PIXELVAULT_API_KEY to be a currently-valid key.
+# (The sticky-PR-comment step only fires on a pull_request context; the full
+# comment path was verified once in PR #1.)
 on:
-  pull_request:
   workflow_dispatch:
 
 permissions:
