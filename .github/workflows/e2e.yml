@@ -1,0 +1,40 @@
+name: e2e (self-test)
+
+# Manual smoke test: runs the action against the live PixelVault API (glob →
+# batch upload → signed URLs) to re-verify end to end. Trigger from the Actions
+# tab. Needs the repo secret PIXELVAULT_API_KEY to be a currently-valid key.
+# (The sticky-PR-comment step only fires on a pull_request context; the full
+# comment path was verified once in PR #1.)
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate a dummy diff screenshot
+        run: |
+          mkdir -p test-results
+          echo 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' | base64 -d > test-results/example-diff.png
+
+      - name: Upload screenshots (self-test)
+        id: shots
+        uses: ./
+        with:
+          api-key: ${{ secrets.PIXELVAULT_API_KEY }}
+          path: test-results
+          pattern: "*-diff.png"
+          visibility: private
+          collection-name: selftest-${{ github.run_id }}
+
+      - name: Assert it uploaded
+        run: |
+          echo "collection-id=${{ steps.shots.outputs.collection-id }}"
+          echo "count=${{ steps.shots.outputs.count }}"
+          test "${{ steps.shots.outputs.count }}" = "1"
