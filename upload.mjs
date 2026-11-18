@@ -109,7 +109,10 @@ async function upsertPrComment({ owner, repo, prNumber, token, body }) {
 function renderComment({ uploaded, failed, collectionId }) {
   const MARKER = "<!-- pixelvault-upload-screenshots -->";
   const rows = uploaded
-    .map((it) => `| \`${it.filename}\` | [![${it.filename}](${it.url})](${it.url}) |`)
+    .map((it) => {
+      const url = it.branded_url || it.url;
+      return `| \`${it.filename}\` | [![${it.filename}](${url})](${url}) |`;
+    })
     .join("\n");
   const failLine = failed.length
     ? `\n\n<sub>⚠️ ${failed.length} failed: ${failed
