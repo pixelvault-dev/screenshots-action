@@ -65,6 +65,7 @@ Set `PIXELVAULT_API_KEY` (a `pv_live_...` key) as a repository secret.
   or upgrade. Public hosting is unlimited on free.
 - **Private previews in the PR** render via GitHub's image proxy fetching the signed URL;
   use a long `sign-expires-in` (and the action re-signs on each run) so they don't rot.
+- **Custom domains.** When the project has a ready custom domain, PR previews use the API-provided `branded_url`; canonical URLs remain the fallback.
 - **Batching.** More than 50 files are split into multiple requests into the same
   collection automatically. Partial failures are reported in the comment, not fatal.
 - **Idempotent.** Re-running a job upserts the same collection (`collection-name`), so the
