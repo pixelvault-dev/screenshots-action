@@ -106,12 +106,26 @@ async function upsertPrComment({ owner, repo, prNumber, token, body }) {
   }
 }
 
+// Public img.pixelvault.dev image/MP4 paths have a share page at
+// pixelvault.dev/i/<same path>. Signed (?token=), private (cp/), custom-domain
+// and other URLs don't, so they return null and keep linking to the raw file.
+const SHARE_PATH_RE =
+  /^https:\/\/img\.pixelvault\.dev\/([A-Za-z0-9_-]{1,64})\/(?:(c\/[A-Za-z0-9_-]{1,64}|[A-Za-z0-9_-]{1,64})\/)?([A-Za-z0-9_-]{1,64})\.(png|jpe?g|gif|webp|avif|mp4)$/;
+
+function shareUrl(url) {
+  if (typeof url !== "string" || !SHARE_PATH_RE.test(url)) return null;
+  const path = url.slice("https://img.pixelvault.dev/".length);
+  return `https://pixelvault.dev/i/${path}?utm_source=share&utm_medium=markdown&utm_campaign=screenshots-action`;
+}
+
 function renderComment({ uploaded, failed, collectionId }) {
   const MARKER = "<!-- pixelvault-upload-screenshots -->";
   const rows = uploaded
     .map((it) => {
-      const url = it.branded_url || it.url;
-      return `| \`${it.filename}\` | [![${it.filename}](${url})](${url}) |`;
+      const src = it.branded_url || it.url;
+      // A custom domain is the customer's own brand: link to it, not the share page.
+      const href = it.branded_url || shareUrl(it.url) || it.url;
+      return `| \`${it.filename}\` | [![${it.filename}](${src})](${href}) |`;
     })
     .join("\n");
   const failLine = failed.length
